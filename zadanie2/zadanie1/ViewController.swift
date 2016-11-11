@@ -17,28 +17,25 @@ class ViewController: UIViewController {
     @IBOutlet weak var yearField: UITextField!
     @IBOutlet weak var ratingValue: UILabel!
     @IBOutlet weak var ratingStepper: UIStepper!
-    @IBOutlet weak var buttonNext: UIButton!
-    @IBOutlet weak var buttonPrev: UIButton!
     @IBOutlet weak var buttonAdd: UIButton!
     @IBOutlet weak var buttonSave: UIButton!
     @IBOutlet weak var buttonRemove: UIButton!
-    @IBOutlet weak var statusLabel: UILabel!
-    @IBOutlet weak var statusLabelMax: UILabel!
     
-    var albums: NSMutableArray?
+    var albums: NSMutableArray? = AlbumsSingleton.sharedInstance.list
     var albumIndex: Int = 0
+    var showNewAlbum = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
         buttonSave.isEnabled = false
-        buttonPrev.isEnabled = false
-        ratingStepper.maximumValue = 5;
+        ratingStepper.maximumValue = 5
         
-        let plistCatPath = Bundle.main.path(forResource: "albums", ofType: "plist")
-        albums = NSMutableArray(contentsOfFile:plistCatPath!)
-        setStatus()
-        loadAlbum()
-        
+        if showNewAlbum == true {
+            buttonAddClicked(buttonAdd)
+            showNewAlbum = false
+        } else {
+            loadAlbum()
+        }
     }
 
     override func didReceiveMemoryWarning() {
@@ -47,6 +44,7 @@ class ViewController: UIViewController {
     }
     
     func setRating(ratingValue: Int?) {
+       
         if ratingValue != nil && ratingValue! >= 0 && ratingValue! <= 5 {
             self.ratingValue.text = String(ratingValue!)
         }
@@ -67,16 +65,11 @@ class ViewController: UIViewController {
         ratingValue.text = "\(rating)"
     }
     
-    func setStatus() {
-        statusLabel.text = "\(albumIndex + 1)"
-        statusLabelMax.text = "\(albums!.count)"
-    }
-    
     func clearInputs(){
-        authorInput.text = nil
-        nameInput.text = nil
-        genreField.text = nil
-        yearField.text = nil
+        authorInput.text = ""
+        nameInput.text = ""
+        genreField.text = ""
+        yearField.text = ""
         ratingValue.text = "0"
     }
     
@@ -86,29 +79,26 @@ class ViewController: UIViewController {
     
     func addNewAlbum(albumIndex: Int){
         let albumData = NSMutableDictionary()
-        albumData.setObject(authorInput.text as Any , forKey: "artist" as NSCopying)
-        albumData.setObject(nameInput.text as Any , forKey: "title" as NSCopying)
-        albumData.setObject(yearField.text as Any , forKey: "date" as NSCopying)
-        albumData.setObject(genreField.text as Any , forKey: "genre" as NSCopying)
-        albumData.setObject(ratingValue.text as Any , forKey: "rating" as NSCopying)
-    
+         albumData.setObject(authorInput.text as Any , forKey: "artist" as NSCopying)
+         albumData.setObject(nameInput.text as Any , forKey: "title" as NSCopying)
+         albumData.setObject(yearField.text as Any , forKey: "date" as NSCopying)
+         albumData.setObject(genreField.text as Any , forKey: "genre" as NSCopying)
+         albumData.setObject(ratingValue.text as Any , forKey: "rating" as NSCopying)
+        
         albums?.add(albumData)
     }
 
     @IBAction func buttonNextClicked(_ sender: UIButton) {
         albumIndex = albumIndex + 1;
         buttonSave.isEnabled = false
-        buttonPrev.isEnabled = true
         let albumsCount = albums!.count
+        print(albumsCount, albumIndex)
         
         if albumsCount == albumIndex {
             clearInputs()
-            buttonNext.isEnabled = false
             buttonRemove.isEnabled = false
-            statusLabel.text = "new"
             
         } else {
-            setStatus()
             loadAlbum()
             buttonRemove.isEnabled = true
         }
@@ -117,16 +107,10 @@ class ViewController: UIViewController {
     @IBAction func buttonPrevClicked(_ sender: UIButton) {
         albumIndex = albumIndex - 1;
         buttonSave.isEnabled = false
-        buttonNext.isEnabled = true
         buttonRemove.isEnabled = true
         
         if albums!.count > albumIndex {
-            if albumIndex == 0 {
-                buttonPrev.isEnabled = false
-            }
-            
             loadAlbum()
-            setStatus()
         }
     }
     
@@ -144,26 +128,20 @@ class ViewController: UIViewController {
         genreField.text = "\(genre)"
         yearField.text = "\(date)"
         ratingValue.text = "\(rating)"
-        statusLabelMax.text = "\(albums!.count)"
         albumIndex = albums!.count - 1
-        statusLabel.text = "\(albums!.count)"
-
     }
     
 
     @IBAction func buttonSaveClicked(_ sender:UIButton) {
+        print(albumIndex)
         addNewAlbum(albumIndex: albums!.count - 1 );
-        buttonNext.isEnabled = true
-        buttonPrev.isEnabled = true
         buttonSave.isEnabled = false
         loadNewRecord()
+        navigationController?.popViewController(animated: true)
     }
     
-    @IBAction func buttonAddClicked(_ sender: UIButton) {
+    @IBAction func buttonAddClicked(_ sender: Any?) {
         clearInputs()
-        statusLabel.text = "new"
-        statusLabelMax.text = "\(albums!.count + 1)"
-        buttonPrev.isEnabled = true
     }
     
     @IBAction func buttonRemoveClicked(_ sender: UIButton) {
@@ -171,12 +149,18 @@ class ViewController: UIViewController {
         
         if albums!.count > albumIndex {
             loadAlbum()
-            setStatus()
         }
         else {
             clearInputs()
             buttonRemove.isEnabled = false
         }
+        
+        navigationController?.popViewController(animated: true)
+    }
+    
+    @IBAction func btnReturnClicked(_ sender: UIButton) {
+        navigationController?.popViewController(animated: true)
+
     }
     
     
